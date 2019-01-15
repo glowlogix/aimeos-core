@@ -39,7 +39,7 @@ class FreeProductTest extends \PHPUnit\Framework\TestCase
 		$manager = \Aimeos\MShop::create( $context, 'order/base' );
 		$this->order = $manager->createItem();
 		$this->order->__sleep(); // remove event listeners
-		$this->order->setAddress( $this->orderAddress, 'payment' );
+		$this->order->addAddress( $this->orderAddress, 'payment' );
 		$this->order->addProduct( $this->orderProduct );
 
 		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\FreeProduct( $context, $this->plugin );

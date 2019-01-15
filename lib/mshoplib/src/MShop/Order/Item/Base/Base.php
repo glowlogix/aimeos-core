@@ -266,6 +266,36 @@ abstract class Base
 
 
 	/**
+	 * Adds the address of the given type to the basket
+	 *
+	 * @param \Aimeos\MShop\Order\Item\Base\Address\Iface $address Order address item for the given type
+	 * @param string $type Address type, usually "billing" or "delivery"
+	 * @param integer|null $position Position of the address in the list to overwrite
+	 * @return \Aimeos\MShop\Order\Item\Base\Iface Order base item for method chaining
+	 */
+	public function addAddress( \Aimeos\MShop\Order\Item\Base\Address\Iface $address, $type, $position = null )
+	{
+		$this->notifyListeners( 'addAddress.before', $address );
+
+		$address = clone $address;
+		$address->setType( $type ); // enforce that the type is the same as the given one
+		$address->setId( null ); // enforce saving as new item
+
+		if( $position !== null ) {
+			$this->addresses[$type][$position] = $address;
+		} else {
+			$this->addresses[$type][] = $address;
+		}
+
+		$this->setModified();
+
+		$this->notifyListeners( 'addAddress.after', $address );
+
+		return $this;
+	}
+
+
+	/**
 	 * Deletes an order address from the basket
 	 *
 	 * @param string $type Address type defined in \Aimeos\MShop\Order\Item\Base\Address\Base
@@ -292,15 +322,21 @@ abstract class Base
 	 * Returns the order address depending on the given type
 	 *
 	 * @param string $type Address type, usually "billing" or "delivery"
+	 * @param integer|null $pos Address position in list of addresses
 	 * @return \Aimeos\MShop\Order\Item\Base\Address\Iface Order address item for the requested type
 	 */
-	public function getAddress( $type = \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT )
+	public function getAddress( $type, $pos = null )
 	{
-		if( !isset( $this->addresses[$type] ) ) {
+		if( $pos !== null )
+		{
+			if( isset( $this->addresses[$type][$pos] ) ) {
+				return $this->addresses[$type][$pos];
+			}
+
 			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Address not available' ) );
 		}
 
-		return $this->addresses[$type];
+		return ( isset( $this->addresses[$type] ) ? $this->addresses[$type] : [] );
 	}
 
 
@@ -317,30 +353,6 @@ abstract class Base
 
 
 	/**
-	 * Sets the address of the given type in the basket
-	 *
-	 * @param \Aimeos\MShop\Order\Item\Base\Address\Iface $address Order address item for the given type
-	 * @param string $type Address type, usually "billing" or "delivery"
-	 * @return \Aimeos\MShop\Order\Item\Base\Iface Order base item for method chaining
-	 */
-	public function setAddress( \Aimeos\MShop\Order\Item\Base\Address\Iface $address, $type )
-	{
-		$this->notifyListeners( 'setAddress.before', $address );
-
-		$address = clone $address;
-		$address->setType( $type ); // enforce that the type is the same as the given one
-		$address->setId( null ); // enforce saving as new item
-
-		$this->addresses[$type] = $address;
-		$this->setModified();
-
-		$this->notifyListeners( 'setAddress.after', $address );
-
-		return $this;
-	}
-
-
-	/**
 	 * Replaces all addresses in the current basket with the new ones
 	 *
 	 * @param array $map Associative list of order addresses as returned by getAddresses()
@@ -348,8 +360,8 @@ abstract class Base
 	 */
 	public function setAddresses( array $map )
 	{
-		foreach( $map as $type => $item ) {
-			$this->checkAddresses( [$item], $type );
+		foreach( $map as $type => $items ) {
+			$map[$type] = $this->checkAddresses( $items, $type );
 		}
 
 		$this->notifyListeners( 'setAddresses.before', $map );

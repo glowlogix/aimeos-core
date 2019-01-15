@@ -495,7 +495,7 @@ abstract class Base
 		}
 
 		foreach( $addresses as $item ) {
-			$basket->setAddress( $item, $item->getType() );
+			$basket->addAddress( $item, $item->getType() );
 		}
 
 		foreach( $services as $item ) {
@@ -653,11 +653,13 @@ abstract class Base
 	{
 		$manager = $this->getObject()->getSubManager( 'address' );
 
-		foreach( $basket->getAddresses() as $type => $item )
+		foreach( $basket->getAddresses() as $type => $list )
 		{
-			$item->setBaseId( $basket->getId() );
-			$item->setType( $type );
-			$manager->saveItem( $item );
+			foreach( $list as $item )
+			{
+				$item->setBaseId( $basket->getId() )->setType( $type );
+				$manager->saveItem( $item );
+			}
 		}
 
 		return $this;
@@ -715,8 +717,7 @@ abstract class Base
 		{
 			foreach( $list as $item )
 			{
-				$item->setBaseId( $basket->getId() );
-				$item->setType( $type );
+				$item->setBaseId( $basket->getId() )->setType( $type );
 				$item = $manager->saveItem( $item );
 
 				foreach( $item->getAttributeItems() as $attribute )

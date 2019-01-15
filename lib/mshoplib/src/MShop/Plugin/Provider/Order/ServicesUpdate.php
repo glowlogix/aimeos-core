@@ -38,8 +38,8 @@ class ServicesUpdate
 	 */
 	public function register( \Aimeos\MW\Observer\Publisher\Iface $p )
 	{
+		$p->addListener( $this->getObject(), 'addAddress.after' );
 		$p->addListener( $this->getObject(), 'deleteAddress.after' );
-		$p->addListener( $this->getObject(), 'setAddress.after' );
 		$p->addListener( $this->getObject(), 'setAddresses.after' );
 		$p->addListener( $this->getObject(), 'addProduct.after' );
 		$p->addListener( $this->getObject(), 'deleteProduct.after' );

@@ -39,8 +39,8 @@ class Coupon
 		$p->addListener( $this->getObject(), 'addProduct.after' );
 		$p->addListener( $this->getObject(), 'deleteProduct.after' );
 		$p->addListener( $this->getObject(), 'setProducts.after' );
+		$p->addListener( $this->getObject(), 'addAddress.after' );
 		$p->addListener( $this->getObject(), 'deleteAddress.after' );
-		$p->addListener( $this->getObject(), 'setAddress.after' );
 		$p->addListener( $this->getObject(), 'setAddresses.after' );
 		$p->addListener( $this->getObject(), 'addService.after' );
 		$p->addListener( $this->getObject(), 'deleteService.after' );

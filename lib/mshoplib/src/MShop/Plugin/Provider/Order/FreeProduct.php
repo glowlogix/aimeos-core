@@ -84,6 +84,7 @@ class FreeProduct
 	public function register( \Aimeos\MW\Observer\Publisher\Iface $p )
 	{
 		$p->addListener( $this->getObject(), 'addProduct.after' );
+		$p->addListener( $this->getObject(), 'setProducts.after' );
 	}
 
 
@@ -107,30 +108,30 @@ class FreeProduct
 			return true;
 		}
 
-		$addresses = $order->getAddresses();
-		if( !isset( $addresses['payment'] ) ) {
-			return true;
+		try
+		{
+			$count = $this->getConfigValue( 'freeproduct.count' );
+			$status = \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED;
+			$type = \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT;
+			$email = $order->getAddress( $type, 0 )->getEmail();
+
+			$manager = \Aimeos\MShop::create( $this->getContext(), 'order' );
+
+			$search = $manager->createSearch();
+			$expr = [
+				$search->compare( '==', 'order.base.address.email', $email ),
+				$search->compare( '==', 'order.base.product.prodcode', $code ),
+				$search->compare( '>=', 'order.statuspayment', $status ),
+			];
+			$search->setConditions( $search->combine( '&&', $expr ) );
+
+			$result = $manager->aggregate( $search, 'order.base.address.email', 'order.base.product.quantity', 'sum' );
+
+			if( isset( $result[$email] ) && $result[$email] < $count ) {
+				$value->getPrice()->setRebate( $value->getPrice()->getValue() )->setValue( '0.00' );
+			}
 		}
-
-		$email = $addresses['payment']->getEmail();
-		$count = $this->getConfigValue( 'freeproduct.count' );
-		$status = \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED;
-
-		$manager = \Aimeos\MShop::create( $this->getContext(), 'order' );
-
-		$search = $manager->createSearch();
-		$expr = [
-			$search->compare( '==', 'order.base.address.email', $email ),
-			$search->compare( '==', 'order.base.product.prodcode', $code ),
-			$search->compare( '>=', 'order.statuspayment', $status ),
-		];
-		$search->setConditions( $search->combine( '&&', $expr ) );
-
-		$result = $manager->aggregate( $search, 'order.base.address.email', 'order.base.product.quantity', 'sum' );
-
-		if( isset( $result[$email] ) && $result[$email] < $count ) {
-			$value->getPrice()->setRebate( $value->getPrice()->getValue() )->setValue( '0.00' );
-		}
+		catch( \Aimeos\MShop\Order\Exception $e ) { ; } // No billing address available
 
 		return true;
 	}

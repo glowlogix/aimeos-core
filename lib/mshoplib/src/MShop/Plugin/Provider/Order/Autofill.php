@@ -154,7 +154,9 @@ class Autofill
 	public function register( \Aimeos\MW\Observer\Publisher\Iface $p )
 	{
 		$p->addListener( $this->getObject(), 'addProduct.after' );
+		$p->addListener( $this->getObject(), 'setProducts.after' );
 		$p->addListener( $this->getObject(), 'deleteService.after' );
+		$p->addListener( $this->getObject(), 'setServices.after' );
 	}
 
 
@@ -265,7 +267,7 @@ class Autofill
 			$search->setConditions( $search->compare( '==', 'order.base.address.baseid', $item->getBaseId() ) );
 
 			foreach( $manager->searchItems( $search ) as $address ) {
-				$addresses[$address->getType()] = $address;
+				$addresses[$address->getType()][] = $address;
 			}
 
 			$order->setAddresses( $addresses );
@@ -325,7 +327,7 @@ class Autofill
 			$orderAddressItem = $orderAddressManager->createItem();
 			$orderAddressItem->copyFrom( $address );
 
-			$order->setAddress( $orderAddressItem, $type );
+			$order->addAddress( $orderAddressItem, $type );
 		}
 	}
 

@@ -523,10 +523,13 @@ class StandardTest extends \PHPUnit\Framework\TestCase
 
 		$this->assertEquals( 0, count( $order->getCoupons() ) );
 
-		foreach( $order->getAddresses() as $address )
+		foreach( $order->getAddresses() as $list )
 		{
-			$this->assertEquals( null, $address->getId() );
-			$this->assertEquals( null, $address->getBaseId() );
+			foreach( $list as $address )
+			{
+				$this->assertEquals( null, $address->getId() );
+				$this->assertEquals( null, $address->getBaseId() );
+			}
 		}
 
 		foreach( $order->getProducts() as $product )
@@ -671,8 +674,11 @@ class StandardTest extends \PHPUnit\Framework\TestCase
 
 		$newAddresses = $newBasket->getAddresses();
 
-		foreach( $basket->getAddresses() as $key => $address ) {
-			$this->assertEquals( $address->getId(), $newAddresses[$key]->getId() );
+		foreach( $basket->getAddresses() as $key => $list )
+		{
+			foreach( $list as $address ) {
+				$this->assertEquals( $address->getId(), $newAddresses[$key]->getId() );
+			}
 		}
 
 		$newProducts = $newBasket->getProducts();
