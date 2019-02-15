@@ -78,7 +78,7 @@ class Imagick
 			$this->image->setImageCompressionQuality( 100 - $quality ); // inverse quality scheme
 
 			if( $filename === null ) {
-				return $this->image->getImageBlob();
+				return $this->image->getImagesBlob();
 			}
 
 			$this->image->writeImage( $filename );
